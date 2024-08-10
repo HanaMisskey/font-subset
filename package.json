@@ -1,0 +1,16 @@
+{
+  "name": "font-subset",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/fontkit": "^2.0.7"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "fontkit": "^2.0.4"
+  }
+}
