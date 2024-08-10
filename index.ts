@@ -38,23 +38,30 @@ async function main() {
 
     const unicodeRanges = await getUnicodeRanges();
 
+    const unicodeRangesMap = new Map<string, number[]>(unicodeRanges.map((range) => [range.range, range.values]));
+
     const cssChunks: string[] = [];
 
-    await Promise.allSettled(unicodeRanges.map(async (range) => {
-        const subset = await generateSubsettedFont(values.input!, range.values);
-        if (subset) {
-            const hash = Bun.hash(subset);
-            const filename = `${values.name}-${hash.toString(16)}.woff`;
-            await Bun.write(`./dist/${filename}`, subset);
+    const subsettedFonts = await generateSubsettedFont(values.input, unicodeRangesMap);
 
-            cssChunks.push(`@font-face {
+    console.log('Writing font files and css...');
+
+    await Promise.allSettled(unicodeRanges.map(async (range, i) => {
+        const font = subsettedFonts.get(range.range);
+        if (!font) return;
+        const hash = Bun.hash(range.range);
+        const filename = `${values.name}-${hash.toString(16)}.woff2`;
+        await Bun.write(`./dist/${filename}`, font);
+
+        cssChunks.push(`/* [${i + 1}] */
+@font-face {
     font-family: '${values.name}';
     font-style: normal;
     font-weight: ${values.weight};
+    font-display: swap;
     src: url('./${filename}') format('woff2');
     unicode-range: ${range.range};
 }\n`);
-        }
     }));
 
     await Bun.write('./dist/font.css', cssChunks.join('\n'));

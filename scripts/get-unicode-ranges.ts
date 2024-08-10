@@ -1,30 +1,33 @@
+type UnicodeRange = {
+    range: string;
+    values: number[];
+};
+
 export async function getUnicodeRanges() {
     const notoSansJPCSS = await fetch('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400&display=swap', {
         headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
         }
     });
-    const unicodeRangeRegex = /unicode-range:\s*([^;]+);/gm;
-    const unicodeRegex = /U\+([-0-9a-fA-F]+)/g;
-    const unicodeRanges = [];
+    const unicodeRangeRegex = /unicode-range:\s*([^;]+);/g;
+    const unicodeRanges: UnicodeRange[] = [];
 
     if (notoSansJPCSS.ok) {
         const cssText = await notoSansJPCSS.text();
-        let match;
-        while ((match = unicodeRangeRegex.exec(cssText)) !== null) {
+        [...cssText.matchAll(unicodeRangeRegex)].forEach((match) => {
             const unicodeRange = match[1];
             const rangeChunks = unicodeRange.split(',').map((rangeChunk) => rangeChunk.trim());
 
             const values = rangeChunks.flatMap((rangeChunk) => {
-                const hexes = unicodeRegex.exec(rangeChunk);
-                if (hexes === null) {
-                    return [];
-                }
-                const [start, end] = hexes[1].split('-').map((hexes) => parseInt(hexes, 16));
+                const hexes = rangeChunk.replace('U+', '');
                 if (hexes.includes('-')) {
-                    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+                    const ranges = hexes.split('-').map((hex) => parseInt(hex, 16));
+                    const start = Math.min(...ranges);
+                    const end = Math.max(...ranges);
+                    const range = Array.from({ length: end - start + 1 }, (_, i) => start + i);
+                    return range;
                 } else {
-                    return [parseInt(hexes[1], 16)];
+                    return [parseInt(hexes, 16)];
                 }
             });
 
@@ -32,7 +35,7 @@ export async function getUnicodeRanges() {
                 range: unicodeRange,
                 values,
             });
-        }
+        });
     }
 
     return unicodeRanges;
