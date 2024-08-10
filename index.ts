@@ -24,6 +24,9 @@ async function main() {
                 type: 'string',
                 default: '400',
             },
+            sizeadjust: {
+                type: 'string',
+            },
         },
         strict: true,
         allowPositionals: true,
@@ -49,19 +52,27 @@ async function main() {
     await Promise.allSettled(unicodeRanges.map(async (range, i) => {
         const font = subsettedFonts.get(range.range);
         if (!font) return;
-        const hash = Bun.hash(range.range);
-        const filename = `${values.name}-${hash.toString(16)}.woff2`;
+        const hash = Bun.hash(font);
+        const filename = `${values.name!.replaceAll(' ', '-')}-${hash.toString(16)}.woff2`;
         await Bun.write(`./dist/${filename}`, font);
+
+        const cssRules = [
+            `font-family: '${values.name}';`,
+            `font-style: normal;`,
+            `font-weight: ${values.weight};`,
+            `font-display: swap;`,
+            `src: url('./${filename}') format('woff2');`,
+            `unicode-range: ${range.range};`,
+        ];
+
+        if (values.sizeadjust) {
+            cssRules.push(`font-size-adjust: ${values.sizeadjust};`);
+        }
 
         cssChunks.push(`/* [${i + 1}] */
 @font-face {
-    font-family: '${values.name}';
-    font-style: normal;
-    font-weight: ${values.weight};
-    font-display: swap;
-    src: url('./${filename}') format('woff2');
-    unicode-range: ${range.range};
-}\n`);
+${cssRules.map((v) => `    ${v}`).join('\n')}
+}`);
     }));
 
     await Bun.write('./dist/font.css', cssChunks.join('\n'));
