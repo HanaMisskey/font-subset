@@ -2,16 +2,17 @@
   "name": "font-subset",
   "module": "index.ts",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "^1.2.9",
+    "@types/wawoff2": "^1.0.2"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.8.3"
   },
   "private": true,
   "type": "module",
   "dependencies": {
     "fontverter": "^2.0.0",
-    "harfbuzzjs": "^0.3.6",
-    "wasm-ttf2woff": "^1.0.0"
+    "harfbuzzjs": "^0.4.7",
+    "wawoff2": "^2.0.1"
   }
 }

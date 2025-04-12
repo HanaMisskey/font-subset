@@ -1,7 +1,7 @@
 import { promises as fsp } from 'fs';
 //@ts-ignore
 import { convert } from 'fontverter';
-import { ttf2woff } from 'wasm-ttf2woff';
+import { compress } from 'wawoff2';
 
 export async function generateSubsettedFont(woffPath: string, unicodeRangeValues: Map<string, number[]>) {
     const font = await fsp.readFile(woffPath);
@@ -68,7 +68,7 @@ export async function generateSubsettedFont(woffPath: string, unicodeRangeValues
         }
 
         // サブセットフォントをバッファに格納
-        subsetFonts.set(key, Buffer.from(await ttf2woff(heapu8.slice(offset, offset + subsetByteLength))));
+        subsetFonts.set(key, Buffer.from(await compress(heapu8.slice(offset, offset + subsetByteLength))));
 
         // メモリを解放
         exports.hb_blob_destroy(result);
